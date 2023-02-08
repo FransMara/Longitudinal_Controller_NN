@@ -1,0 +1,42 @@
+clc
+clear all
+close all
+
+%% Read individual csv's:
+
+csv_const = readtable("basic_agent_st/bin/log_internal/Constant_Acc_Profile.csv");
+csv_linear = readtable("basic_agent_st/bin/log_internal/Linear_Acc_Profile.csv");
+csv_sine_1 = readtable("basic_agent_st/bin/log_internal/Sine_Acc_Profile_1.csv");
+csv_chirp = readtable("basic_agent_st/bin/log_internal/Chirp_Acc_Profile.csv");
+
+%% Combine csv's:
+all_csv = [csv_linear ; csv_linear ; csv_sine_1 ; csv_chirp];
+
+%% Replace NaN with 0:
+a = table2array(all_csv);
+a(isnan(a))=0;
+
+%% Normalize data to between [-1;1]
+
+pedal = -1 + 2.*(a(:,2) - min(a(:,2)))./(max(a(:,2)) - min(a(:,2)));
+velocity = -1 + 2.*(a(:,3) - min(a(:,3)))./(max(a(:,3)) - min(a(:,3)));
+acceleration = -1 + 2.*(a(:,4) - min(a(:,4)))./(max(a(:,4)) - min(a(:,4)));
+
+%% Make a time array consistent with the simulation, that isn't broken up from the data aquisition 
+
+time = zeros(size(p));
+    for i = 1:n
+        arr(i) = (i-1) * 0.05;
+    end
+%time = 0:0.05:size(pedal,1);
+
+%% Reconvert to table:
+
+a_normalised = [a(:,1) , pedal , velocity , acceleration];
+
+final_csv = array2table(a_normalised , ...
+                        "VariableNames",{'time' , 'velocity' , 'pedal' , 'acceleration'});
+
+%% Save to file:
+
+writetable(final_csv , '/Users/francescomaraschin/Desktop/IntelligentVehicles/Project_NN_Conda/Data_aquisition/forward_profiles.csv');
