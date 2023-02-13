@@ -1112,42 +1112,6 @@
 			],
 			"type" : "STATIC",
 			"value" : "/Users/francescomaraschin/Desktop/IntelligentVehicles/LongitudinalControllerNN/NN_CPP"
-		},
-		{
-			"name" : "NN_CPP_TEST_BINARY_DIR",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Value Computed by CMake"
-				}
-			],
-			"type" : "STATIC",
-			"value" : "/Users/francescomaraschin/Desktop/IntelligentVehicles/LongitudinalControllerNN/NN_CPP/cmake-build-debug"
-		},
-		{
-			"name" : "NN_CPP_TEST_IS_TOP_LEVEL",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Value Computed by CMake"
-				}
-			],
-			"type" : "STATIC",
-			"value" : "ON"
-		},
-		{
-			"name" : "NN_CPP_TEST_SOURCE_DIR",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "Value Computed by CMake"
-				}
-			],
-			"type" : "STATIC",
-			"value" : "/Users/francescomaraschin/Desktop/IntelligentVehicles/LongitudinalControllerNN/NN_CPP"
 		}
 	],
 	"kind" : "cache",

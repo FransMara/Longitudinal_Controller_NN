@@ -10,12 +10,7 @@
 //╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝ ╚═════╝ ╚═════╝ ╚══════╝╚══════╝
 
 #include "neural_network.h"
-#include <fstream>
-#include <string>
-#include <vector>
-#include <sstream>
-#include <istream>
-#include <iostream>
+#include "csv_functions.h"
 using namespace std;
 
 // ██████╗ ██╗      ██████╗ ██████╗  █████╗ ██╗         ██╗   ██╗ █████╗ ██████╗ ██╗ █████╗ ██████╗ ██╗     ███████╗███████╗
@@ -78,32 +73,31 @@ const double chan_array[num_channels] = {
 //██║ ╚████║███████╗╚██████╔╝██║  ██║██║  ██║███████╗    ██║ ╚████║███████╗   ██║   ╚███╔███╔╝╚██████╔╝██║  ██║██║  ██╗
 //╚═╝  ╚═══╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝    ╚═╝  ╚═══╝╚══════╝   ╚═╝    ╚══╝╚══╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
 
-double SSNN(const double vel_in[10], const double acc_in[10] ){
+double SSNN(const double vel_in[10], const double acc_in[10] , int window ){
 
     // Pedal params:
-    double activated_acc[10][num_channels];         // array of activated accelerations for every acc in input (10)
-    double act_fcn[10][num_channels];               // array of activated velocities for every vel in input (10)
-    double proto_pedal_out[10];                     // pedal output for each neural network
-    double final_pedal_out[1] = {0};           // final pedal (sum of proto pedals)
+    double activated_acc[window][num_channels];     // array of activated accelerations for every acc in input (10)
+    double act_fcn[window][num_channels];           // array of activated velocities for every vel in input (10)
+    double proto_pedal_out[window];                 // pedal output for each neural network
+    double final_pedal_out[1] = {0};          // final pedal (sum of proto pedals)
 
     // Drag params:
     double proto_drag_out[1];                       // drag not ReLUed
     double final_drag_out[1];                        // ReLUed drag
-
 
     // Final pedal output of NN:
     double req_pedal;
 
     // -- DRAG --
     // Drag uses current vel.
-    double drag_vel[1] = {vel_in[9]};
+    double drag_vel[1] = {vel_in[window-1]};
     velocity_layer<1>(drag_vel , vel_weight , proto_drag_out);
     // Negative ReLU:
     neg_ReLU<1>(proto_drag_out , final_drag_out);
 
     // -- PEDAL --
     // Activation:
-    for (int j = 0; j < 10 ; j++) { // for every row that the activation function makes
+    for (int j = 0; j < window ; j++) { // for every row that the activation function makes
         for (int i = 0; i < num_channels ; i++) { // for every element of the row
             custom_activation<10,num_channels>(vel_in , i , chan_array , act_fcn[j]);
             activated_acc[j][i] = act_fcn[j][i]*acc_in[j];
@@ -122,54 +116,6 @@ double SSNN(const double vel_in[10], const double acc_in[10] ){
     return req_pedal;
 }
 
-//██████╗  █████╗ ██████╗ ███████╗███████╗     ██████╗███████╗██╗   ██╗    ███████╗██╗██╗     ███████╗
-//██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝    ██╔════╝██╔════╝██║   ██║    ██╔════╝██║██║     ██╔════╝
-//██████╔╝███████║██████╔╝███████╗█████╗      ██║     ███████╗██║   ██║    █████╗  ██║██║     █████╗
-//██╔═══╝ ██╔══██║██╔══██╗╚════██║██╔══╝      ██║     ╚════██║╚██╗ ██╔╝    ██╔══╝  ██║██║     ██╔══╝
-//██║     ██║  ██║██║  ██║███████║███████╗    ╚██████╗███████║ ╚████╔╝     ██║     ██║███████╗███████╗
-//╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝     ╚═════╝╚══════╝  ╚═══╝      ╚═╝     ╚═╝╚══════╝╚══════╝
-
-void parseCSV(const string &fileName, double** &data, int &rows, int &columns) {
-    string line, cell;
-    ifstream file(fileName);
-    int count = 0;
-
-    while (getline(file, line)) {
-        ++count;
-    }
-
-    file.clear();
-    file.seekg(0, ios::beg);
-
-    rows = count;
-    data = new double*[count];
-
-    count = 0;
-    while (getline(file, line)) {
-        stringstream lineStream(line);
-        int col = 0;
-        while (getline(lineStream, cell, ',')) {
-            ++col;
-        }
-
-        if (count == 0) {
-            columns = col;
-        }
-
-        data[count] = new double[col];
-
-        lineStream.clear();
-        lineStream.str(line);
-        col = 0;
-        while (getline(lineStream, cell, ',')) {
-            data[count][col] = stod(cell);
-            ++col;
-        }
-
-        ++count;
-    }
-}
-
 //███╗   ███╗ █████╗ ██╗███╗   ██╗
 //████╗ ████║██╔══██╗██║████╗  ██║
 //██╔████╔██║███████║██║██╔██╗ ██║
@@ -180,39 +126,42 @@ void parseCSV(const string &fileName, double** &data, int &rows, int &columns) {
 int main() {
 
     // Check CSV loads properly
-    std::ifstream in("velocity.csv");
-    if (!in.good()) {
-        std::cerr << "Cannot open file" << std::endl;
+    if(check_load("acceleration.csv") && check_load("velocity.csv")){
         return 1;
     }
 
-    // Declare final required pedal:
-    double req_pedal;
-
     // Variables used in csv parsing:
-    double** data;
-    int rows, columns;
-    // Parse the csv
-    parseCSV("velocity.csv", data, rows, columns);
+    double** vel;
+    double** acc;
+    int vel_rows, vel_columns;
+    int acc_rows , acc_columns;
+    // Parse the csvs
+    parseCSV("velocity.csv", vel, vel_rows, vel_columns);
+    parseCSV("acceleration.csv", acc, acc_rows, acc_columns);
 
     // Print the parsed data to cout:
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < columns; ++j) {
-            cout << data[i][j] << " ";
-        }
-        cout << endl;
+    //print_data(vel_rows, vel_columns, vel);
+    //print_data(acc_rows , acc_columns , acc);
+
+    // Print summary of data:
+    summary(vel_rows , vel_columns , "Velocity");
+    summary(acc_rows , acc_columns , "Acceleration");
+
+    cout << acc[0][0] << endl;
+
+    // Declare final required pedal:
+    double req_pedal[vel_rows];
+
+    for (int i = 0; i < vel_rows ; ++i) {
+        req_pedal[i] = SSNN(vel[i] , acc[i] , 10);
+        cout << req_pedal[i] << endl;
     }
 
-0'
-    //req_pedal = SSNN(vel_window , acc_window);
-    //cout << "Requested Pedal: " << req_pedal << endl;
-
+    make_csv(vel_rows ,req_pedal , "pedal_out_cpp");
 
     // Clean the memory:
-    for (int i = 0; i < rows; ++i) {
-        delete[] data[i];
-    }
-    delete[] data;
+    clean_memory(vel_rows , vel);
+    clean_memory(acc_rows,acc);
 
     return 0;
 }

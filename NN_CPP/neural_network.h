@@ -96,7 +96,6 @@ void addition( const double data_in[Nin] , double data_out[Nout]){
 //      chan_array = array containing the velocities corresponding to the channel centers
 template <int Nvel , int Nchan>
 void custom_activation(const double act_in[Nvel] , const int chan_id , const double chan_array[Nchan] , double act_fcn[Nvel]){
-
     double ampl , ampl_1 , ampl_2;      // the width of a channel
     // shared pointer
     // First dimension of the activation (first channel):
