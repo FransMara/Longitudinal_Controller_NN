@@ -6,18 +6,19 @@ from src.functions.layers import ActivLin1D
 from src.functions.activation_parameters import activation_function_parameters as act_fun_params
 from src.models import forward_model as fm
 
-def forward_training(direct_dataset):
+# Model Training:
+def forward_training(forward_dataset):
 
     # NN parameters
     nn_name = 'forward_model'
-    batch_size = 100
-    epochs = 100
-    valid_split = 0.3
-    input_window = 10
+    batch_size    = 100
+    epochs        = 200
+    valid_split   = 0.1
+    input_window  = 10
     output_window = 1
-    l2_reg = 8e-6
-    opt_params = [0.001,  # learning rate
-                  1e-7]  # epsilon
+    l2_reg        = 8e-8
+    opt_params    = [0.001, # learning rate
+                     1e-8]  # epsilon
 
     # Weights initializers
     drag_init = np.ones(shape=(1, 1),
@@ -30,7 +31,7 @@ def forward_training(direct_dataset):
 
 
     # Reshape and split data
-    train_data, valid_data, time = dh.window_data(dataset=direct_dataset,
+    train_data, valid_data, time = dh.window_data(dataset=forward_dataset,
                                                   input_labels=['pedal',
                                                                 'velocity'],
                                                   output_labels=['acceleration'],
@@ -40,7 +41,7 @@ def forward_training(direct_dataset):
                                                   validation_split=valid_split)
 
     # Create the channel parameters:
-    channel_params = act_fun_params(direct_dataset)
+    channel_params = act_fun_params(forward_dataset)
     # Create model
     act_model = fm.activated_model(batch_size=batch_size,
                                    input_shape=input_window,
@@ -54,19 +55,19 @@ def forward_training(direct_dataset):
     act_model.summary()
 
     # Callbacks
-    save_path = f'/Users/francescomaraschin/Desktop/IntelligentVehicles/LongitudinalControllerNN/Data/trained_models/{nn_name}/{nn_name}.h5'
+    save_path = f'/Users/francescomaraschin/Library/Mobile Documents/com~apple~CloudDocs/Universtiy/IntelligentVehicles/LongitudinalControllerNN/Data/trained_models/{nn_name}/{nn_name}.h5'
     checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath=save_path,
-                                                    monitor='val_loss',
-                                                    mode='min',
+                                                    monitor='loss',
+                                                    mode='auto',
                                                     verbose=1,
                                                     save_best_only=True)
-    early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                  patience=100,
+    early_stop = tf.keras.callbacks.EarlyStopping(monitor='loss',
+                                                  patience=50,
                                                   verbose=1)
 
     # Fix the random seed for reproducibility
     tf.keras.utils.set_random_seed(314159)
-
+    
     # Fit model
     history = act_model.fit(x=train_data[0],
                             y=train_data[1],
@@ -76,7 +77,7 @@ def forward_training(direct_dataset):
                             callbacks=[checkpoint,
                                        early_stop],
                             validation_data=valid_data,
-                            shuffle=True,
+                            shuffle=False,  # Shuffle shuffels only the training data, dont use if time dependant...
                             use_multiprocessing=True)
 
     # Load the best model

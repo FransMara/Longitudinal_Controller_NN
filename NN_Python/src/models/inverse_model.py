@@ -34,24 +34,22 @@ def inverse_model(batch_size, input_shape, output_shape, weights_init, l2_reg, c
     # Square the input velocity :
     input_vx_squared = tf.keras.layers.Multiply(name='velocity_squared')([input_vx[:, -2:-1], input_vx[:, -2:-1]])
     # Multiply by the weights:
-    vel_weighted = tf.keras.layers.Dense(units=1,
-                                         kernel_initializer='random_normal',
-                                         use_bias=False,
-                                         name='drag_coeff_layer')(input_vx_squared)
+    vel_weighted = tf.keras.layers.Dense(units    = 1,
+                                         use_bias = False,
+                                         name     = 'drag_coeff_layer')(input_vx_squared)
     # Positive ReLU:
-    drag = tf.keras.layers.ReLU(name='negative_ReLU')(vel_weighted)
+    drag = tf.keras.layers.ReLU(name='positive_ReLU')(vel_weighted)
 
     # -- ACCELERATION --
-    # Acceleration activation:
-    # Loop through all the channels and add the activation that falls under the specific channel
     for i in range(channel_parameters[0]):
-        custom_act_acc = ActivLin1D(chan_id=i,
-                                    chan_arr=channel_parameters[1][0],
-                                    name='activated_acceleration_' + str(i))([input_vx, input_acc])
-        pedal_layer[i] = pedal_layer[i] + tf.keras.layers.Dense(units=1,
-                                                                kernel_initializer='random_normal',
-                                                                name='pedal_layer_' + str(i))(custom_act_acc)
-    pedal = tf.keras.layers.Add(name='neural_layer_out')(pedal_layer)
+        custom_act_acc = ActivLin1D(chan_id            = i,
+                                    chan_arr           = channel_parameters[1][0],
+                                    name               = 'activated_acceleration_' + str(i))([input_vx, input_acc])
+        pedal_layer[i] = pedal_layer[i] + tf.keras.layers.Dense(
+                                    units              = 1,
+                                    name               = 'pedal_layer_' + str(i))(custom_act_acc)
+        
+    pedal = tf.keras.layers.Add(name = 'add_neural_layers')(pedal_layer)
 
     # -- SUM ACCELERATION AND DRAG --
     summed = tf.keras.layers.Add(name='pedal_drag_final_sum')([pedal, drag])
@@ -60,16 +58,16 @@ def inverse_model(batch_size, input_shape, output_shape, weights_init, l2_reg, c
     output = summed
 
     # Define the model
-    model = tf.keras.Model(inputs=[input_vx, input_acc],
-                           outputs=output,
-                           name='inverse_model')
+    model = tf.keras.Model(inputs  = [input_vx, input_acc],
+                           outputs = output,
+                           name    = 'inverse_model')
 
     # Optimizer parameters
-    optimizer = tf.keras.optimizers.Adam(learning_rate=opt_params[0],
-                                         epsilon=opt_params[1])
+    optimizer = tf.keras.optimizers.Adam(learning_rate = opt_params[0],
+                                         epsilon       = opt_params[1])
 
     # Compile the model
-    model.compile(optimizer=optimizer,
-                  loss='mean_squared_error')
+    model.compile(optimizer = optimizer,
+                  loss      = 'mean_squared_error')
 
     return model

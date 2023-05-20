@@ -1,4 +1,4 @@
-# Install script for directory: /Users/francescomaraschin/Desktop/IntelligentVehicles/LongitudinalControllerNN/NN_CPP_TESTING
+# Install script for directory: /Users/francescomaraschin/Desktop/NN_CPP_Testing
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/francescomaraschin/Desktop/IntelligentVehicles/LongitudinalControllerNN/NN_CPP_TESTING/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/francescomaraschin/Desktop/NN_CPP_Testing/cmake-build-debug/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

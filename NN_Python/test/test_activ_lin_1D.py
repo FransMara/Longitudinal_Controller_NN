@@ -72,6 +72,9 @@ def main():
     plt.figure()
     plt.plot(act_in, act_fcn)
     plt.grid(True)
+    plt.title('Custom Activation Function')
+    plt.xlabel('Velocity')
+    plt.ylabel('Scaling Factor')
     plt.show()
 
     # Check that the sum of all activation functions is equal to 1

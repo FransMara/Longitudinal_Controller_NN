@@ -1,7 +1,6 @@
 import tensorflow as tf
 import numpy as np
 from src.functions import initializers as ci  # i.e., custom initializers
-from src.models import simple_direct_model as dm
 from src.utils import data_handler as dh
 
 from src.functions.layers import ActivLin1D
@@ -12,14 +11,14 @@ from src.models import inverse_model as im
 def inverse_training(inverse_dataset):
     # NN parameters
     nn_name = 'inverse_model'
-    batch_size = 100
-    epochs = 100
-    valid_split = 0.3
-    input_window = 10
+    batch_size    = 100
+    epochs        = 200
+    valid_split   = 0.1
+    input_window  = 10
     output_window = 1
-    l2_reg = 8e-6
-    opt_params = [0.001,  # learning rate
-                  1e-7]  # epsilon
+    l2_reg        = 8e-8
+    opt_params    = [0.001, # learning rate
+                     1e-8]  # epsilon
 
     # Weights initializers
     drag_init = np.ones(shape=(1, 1),
@@ -29,9 +28,6 @@ def inverse_training(inverse_dataset):
 
     weights_init = [drag_init,
                     fc_init]
-
-    # Load data
-    #inverse_dataset = dh.load_csv(inverse_dataset_path)
 
     # Reshape and split data
     train_data, valid_data, time = dh.window_data(dataset=inverse_dataset,
@@ -60,19 +56,19 @@ def inverse_training(inverse_dataset):
     inv_model.summary()
 
     # Callbacks
-    save_path = f'/Users/francescomaraschin/Desktop/IntelligentVehicles/LongitudinalControllerNN/Data/trained_models/{nn_name}/{nn_name}.h5'
+    save_path = f'/Users/francescomaraschin/Library/Mobile Documents/com~apple~CloudDocs/Universtiy/IntelligentVehicles/LongitudinalControllerNN/Data/trained_models/{nn_name}/{nn_name}.h5'
     checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath=save_path,
                                                     monitor='val_loss',
-                                                    mode='min',
+                                                    mode='auto',
                                                     verbose=1,
                                                     save_best_only=True)
     early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                  patience=100,
+                                                  patience=50,
                                                   verbose=1)
 
     # Fix the random seed for reproducibility
     tf.keras.utils.set_random_seed(314159)
-
+    
     # Fit model
     history = inv_model.fit(x=train_data[0],
                             y=train_data[1],
@@ -82,7 +78,7 @@ def inverse_training(inverse_dataset):
                             callbacks=[checkpoint,
                                        early_stop],
                             validation_data=valid_data,
-                            shuffle=True,
+                            shuffle=False,
                             use_multiprocessing=True)
 
     # Load the best model
